@@ -8,7 +8,7 @@ from esphome.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
-    ICON_CURRENT_AC,
+    DEVICE_CLASS_FREQUENCY,
     STATE_CLASS_MEASUREMENT,
     UNIT_VOLT,
     UNIT_AMPERE,
@@ -72,11 +72,11 @@ CONFIG_SCHEMA = (
             ),
             cv.Optional(CONF_FREQUENCY): sensor.sensor_schema(
                 unit_of_measurement=UNIT_HERTZ,
-                icon=ICON_CURRENT_AC,
                 accuracy_decimals=1,
+                device_class=DEVICE_CLASS_FREQUENCY,
                 state_class=STATE_CLASS_MEASUREMENT,
             ),
-            cv.Optional(CONF_SONOFF_MODEL, default="DUALR3"): cv.enum(SONOFF_MODEL, upper=True),        
+            cv.Optional(CONF_SONOFF_MODEL, default="DUALR3"): cv.enum(SONOFF_MODEL, upper=True),
         }
     )
     .extend(cv.polling_component_schema("60s"))
