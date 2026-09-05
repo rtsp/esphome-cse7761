@@ -22,6 +22,7 @@ static const int CSE7761_FREF                   = 3579545;  // System clock (3.5
 
 static const uint8_t CSE7761_REG_SYSCON         = 0x00;     // (2) System Control Register (0x0A04)
 static const uint8_t CSE7761_REG_EMUCON         = 0x01;     // (2) Metering control register (0x0000)
+static const uint8_t CSE7761_REG_PSTARTPA       = 0x03;     // (2) Channel A startup active power threshold (0x0000)
 static const uint8_t CSE7761_REG_EMUCON2        = 0x13;     // (2) Metering control register 2 (0x0001)
 static const uint8_t CSE7761_REG_PULSE1SEL      = 0x1D;     // (2) Pin function output select register (0x3210)
 
@@ -329,6 +330,7 @@ bool CSE7761Component::chip_init_() {
     */
 
     this->write_(CSE7761_REG_EMUCON2 | 0x80, 0x0FE5); // Sonoff Dual R3 / Pow CT + frequency measure enable
+    this->write_(CSE7761_REG_PSTARTPA | 0x80, 0x0008); // ~5-10W sensitivity threshold
     // !!!!!!!! CLEAN MEEEEEE UPPPPPP !!!!!!!!!!!!!!  
     // if (this->frequency_sensor_ != nullptr) {
     //   this->write_(CSE7761_REG_EMUCON2 | 0x80, 0x0FE5); // Sonoff Dual R3 / Pow CT + frequency measure enable
@@ -391,15 +393,17 @@ void CSE7761Component::get_data_() {
   value = this->read_(CSE7761_REG_UFREQ, 2);
   this->data_.frequency = (value >= 0x8000) ? 0 : value;
 
+  uint32_t current_cutoff = (this->data_.model == CSE7761_MODEL_POWCT) ? 300 : 1600;  // No load threshold of ~10mA
+
   value = this->read_(CSE7761_REG_RMSIA, 3);
-  this->data_.current_rms[0] = ((value >= 0x800000) || (value < 1600)) ? 0 : value;  // No load threshold of 10mA
+  this->data_.current_rms[0] = ((value >= 0x800000) || (value < current_cutoff)) ? 0 : value;
   value = this->read_(CSE7761_REG_POWERPA, 4);
-  this->data_.active_power[0] = (0 == this->data_.current_rms[0]) ? 0 : ((uint32_t) abs((int) value));
+  this->data_.active_power[0] = (0 == this->data_.current_rms[0]) ? 0 : (int32_t) value;
 
   value = this->read_(CSE7761_REG_RMSIB, 3);
   this->data_.current_rms[1] = ((value >= 0x800000) || (value < 1600)) ? 0 : value;  // No load threshold of 10mA
   value = this->read_(CSE7761_REG_POWERPB, 4);
-  this->data_.active_power[1] = (0 == this->data_.current_rms[1]) ? 0 : ((uint32_t) abs((int) value));
+  this->data_.active_power[1] = (0 == this->data_.current_rms[1]) ? 0 : (int32_t) value;
 
   // convert values and publish to sensors
 

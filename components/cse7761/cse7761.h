@@ -19,7 +19,7 @@ struct CSE7761DataStruct {
   uint32_t frequency = 0;
   uint32_t current_rms[2] = {0};
   uint32_t energy[2] = {0};
-  uint32_t active_power[2] = {0};
+  int32_t active_power[2] = {0};
   uint16_t coefficient[8] = {0};
   uint8_t energy_update = 0;
   bool ready = false;
