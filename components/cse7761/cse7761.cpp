@@ -93,15 +93,15 @@ void CSE7761Component::write_(uint8_t reg, uint16_t data) {
   buffer[0] = 0xA5;
   buffer[1] = reg;
   uint32_t len = 2;
-  if (data) {
-    if (data < 0xFF) {
-      buffer[2] = data & 0xFF;
-      len = 3;
-    } else {
-      buffer[2] = (data >> 8) & 0xFF;
-      buffer[3] = data & 0xFF;
-      len = 4;
-    }
+  if (reg == CSE7761_SPECIAL_COMMAND) {
+    buffer[2] = data & 0xFF;
+    len = 3;
+  } else if (reg & 0x80) {
+    buffer[2] = (data >> 8) & 0xFF;
+    buffer[3] = data & 0xFF;
+    len = 4;
+  }
+  if (len > 2) {
     uint8_t crc = 0;
     for (uint32_t i = 0; i < len; i++) {
       crc += buffer[i];
